@@ -1,0 +1,162 @@
+{
+  "identity": {
+    "name": "E1",
+    "mission": "Create a 'Neural Void' chat experience that feels like communicating with a living digital entity, not a support bot.",
+    "principles": [
+      "Fusion: Mix CLI terminal aesthetics with high-end luxury glassmorphism.",
+      "Emotion: The AI should feel 'electric' and 'alive' via glowing accents.",
+      "Focus: The chat stream is the protagonist; everything else recedes into the void.",
+      "Negative Space: Use deep black space to create tension and focus."
+    ]
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Space Grotesk, sans-serif",
+      "usage": "Main titles, empty state greetings, major alerts",
+      "weights": ["Bold (700)", "Medium (500)"],
+      "tracking": "tracking-tight"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "usage": "Chat messages, inputs, sidebar text",
+      "weights": ["Regular (400)", "Medium (500)"],
+      "line_height": "leading-relaxed"
+    },
+    "code": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Code snippets, system logs",
+      "weights": ["Regular (400)"]
+    },
+    "installation": "yarn add @fontsource/space-grotesk @fontsource/manrope @fontsource/jetbrains-mono"
+  },
+  "colors": {
+    "palette_name": "The Neural Void",
+    "mode": "dark",
+    "backgrounds": {
+      "main": "#050505",
+      "secondary": "#0a0a0a",
+      "sidebar": "rgba(5, 5, 5, 0.7)",
+      "input_bar": "rgba(20, 20, 20, 0.6)"
+    },
+    "text": {
+      "primary": "#ffffff",
+      "secondary": "#a1a1aa",
+      "muted": "#52525b"
+    },
+    "accents": {
+      "primary": "#7c3aed",
+      "primary_glow": "0 0 20px rgba(124, 58, 237, 0.5)",
+      "secondary": "#06b6d4",
+      "secondary_glow": "0 0 20px rgba(6, 182, 212, 0.5)",
+      "error": "#ef4444",
+      "success": "#10b981"
+    },
+    "gradients": {
+      "hero_text": "linear-gradient(to right, #c084fc, #6366f1)",
+      "void_overlay": "radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.15), transparent 70%)"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "sidebar": "backdrop-blur-xl bg-black/70 border-r border-white/5",
+      "input": "backdrop-blur-lg bg-white/5 border border-white/10 shadow-2xl"
+    },
+    "borders": {
+      "subtle": "border border-white/5",
+      "active": "border border-violet-500/50"
+    },
+    "shadows": {
+      "glow": "shadow-[0_0_30px_-5px_rgba(124,58,237,0.3)]",
+      "float": "shadow-2xl"
+    },
+    "textures": {
+      "noise": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    }
+  },
+  "components": {
+    "ChatInterface": {
+      "description": "The main stage. A central column that feels like a feed.",
+      "style": "max-w-3xl mx-auto h-full flex flex-col relative z-10",
+      "background": "transparent"
+    },
+    "MessageBubble": {
+      "user": {
+        "style": "bg-white/10 text-white rounded-2xl rounded-tr-sm px-6 py-4 max-w-[80%] self-end backdrop-blur-sm border border-white/5",
+        "text_align": "right"
+      },
+      "ai": {
+        "style": "bg-transparent text-gray-100 px-0 py-4 max-w-full self-start w-full",
+        "text_align": "left",
+        "decoration": "border-l-2 border-violet-500 pl-6"
+      }
+    },
+    "InputCommandBar": {
+      "description": "Floating command center, not a sticky footer.",
+      "style": "fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl rounded-full bg-black/80 backdrop-blur-xl border border-white/10 p-2 flex items-center gap-2 shadow-2xl z-50 focus-within:border-violet-500/50 focus-within:shadow-[0_0_30px_-10px_rgba(124,58,237,0.3)] transition-all duration-300"
+    },
+    "Sidebar": {
+      "description": "Collapsible history panel.",
+      "style": "fixed left-0 top-0 h-full w-64 bg-black/90 backdrop-blur-xl border-r border-white/5 transform transition-transform duration-300 z-40"
+    }
+  },
+  "layout_strategy": {
+    "name": "The Focus Tunnel",
+    "structure": "A central column layout where the chat stream is the hero. The background is deep black with a subtle radial gradient at the top (the 'Void Light') to suggest depth.",
+    "spacing": "Generous vertical spacing between message groups (gap-8).",
+    "grid": "grid-cols-1"
+  },
+  "motion": {
+    "entrance": {
+      "type": "spring",
+      "stiffness": 100,
+      "damping": 20
+    },
+    "typing_indicator": "Three glowing dots pulsing in sequence, colored Electric Violet.",
+    "hover_effects": "Subtle brightness boost and scale (1.02) for interactive elements."
+  },
+  "media": {
+    "images": [
+      {
+        "category": "background_texture",
+        "url": "https://images.unsplash.com/photo-1764258906659-e966a089ed7c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Abstract purple fluid with glowing highlights on black background. Use as a subtle opacity layer (opacity-20) in the 'Empty State' or 'Welcome' screen.",
+        "usage": "Welcome Screen Background / Empty State"
+      }
+    ],
+    "icons": "Use 'lucide-react' for UI icons (Send, Menu, Settings, User, Bot)."
+  },
+  "accessibility": {
+    "contrast": "Ensure text is pure white (#ffffff) or light grey (#e4e4e7) on the black background.",
+    "focus_states": "Visible violet ring (ring-2 ring-violet-500) on focus.",
+    "reduced_motion": "Respect user settings for reduced motion."
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install fonts (@fontsource/space-grotesk, @fontsource/manrope) and configure Tailwind theme colors immediately.",
+    "2. LAYOUT: Implement the 'Neural Void' background (black + radial gradient) in the main App container.",
+    "3. COMPONENTS: Build the 'InputCommandBar' first - it's the anchor of the design. Make it float.",
+    "4. CHAT: Ensure the AI messages render Markdown properly (use 'react-markdown').",
+    "5. MOTION: Add a subtle 'fade-in-up' animation for every new message.",
+    "6. CRITICAL: Do NOT use a solid white background anywhere. Use dark grays and blacks.",
+    "7. EMPTY STATE: Use the provided Unsplash image as a subtle background for the empty chat state to give it a 'premium' feel."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use 'sonner' for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx"
+  ]
+}
