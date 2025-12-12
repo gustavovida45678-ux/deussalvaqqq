@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
 from datetime import datetime, timezone
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 
 ROOT_DIR = Path(__file__).parent
@@ -27,44 +28,94 @@ api_router = APIRouter(prefix="/api")
 
 
 # Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
+    role: str  # 'user' or 'assistant'
+    content: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class ChatRequest(BaseModel):
+    message: str
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+class ChatResponse(BaseModel):
+    user_message: Message
+    assistant_message: Message
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+# Chat endpoint
+@api_router.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    try:
+        # Create user message
+        user_message = Message(
+            role="user",
+            content=request.message
+        )
+        
+        # Save user message to database
+        user_doc = user_message.model_dump()
+        user_doc['timestamp'] = user_doc['timestamp'].isoformat()
+        await db.messages.insert_one(user_doc)
+        
+        # Initialize LLM chat
+        chat_client = LlmChat(
+            api_key=os.environ['EMERGENT_LLM_KEY'],
+            session_id="chat-session",
+            system_message="Você é um assistente útil e amigável. Responda em português de forma clara e concisa."
+        )
+        chat_client.with_model("openai", "gpt-5.1")
+        
+        # Send message to AI
+        user_msg = UserMessage(text=request.message)
+        ai_response = await chat_client.send_message(user_msg)
+        
+        # Create assistant message
+        assistant_message = Message(
+            role="assistant",
+            content=ai_response
+        )
+        
+        # Save assistant message to database
+        assistant_doc = assistant_message.model_dump()
+        assistant_doc['timestamp'] = assistant_doc['timestamp'].isoformat()
+        await db.messages.insert_one(assistant_doc)
+        
+        return ChatResponse(
+            user_message=user_message,
+            assistant_message=assistant_message
+        )
+        
+    except Exception as e:
+        logging.error(f"Error in chat endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+
+
+@api_router.get("/messages", response_model=List[Message])
+async def get_messages():
+    """Get all chat messages"""
+    messages = await db.messages.find({}, {"_id": 0}).sort("timestamp", 1).to_list(1000)
     
     # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    for msg in messages:
+        if isinstance(msg['timestamp'], str):
+            msg['timestamp'] = datetime.fromisoformat(msg['timestamp'])
     
-    return status_checks
+    return messages
+
+
+@api_router.delete("/messages")
+async def clear_messages():
+    """Clear all chat messages"""
+    result = await db.messages.delete_many({})
+    return {"deleted_count": result.deleted_count}
+
+
+@api_router.get("/")
+async def root():
+    return {"message": "Chat API is running"}
+
 
 # Include the router in the main app
 app.include_router(api_router)
