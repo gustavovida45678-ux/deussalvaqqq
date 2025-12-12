@@ -1,0 +1,56 @@
+{
+  "total_tests": 8,
+  "passed_tests": 8,
+  "failed_tests": 0,
+  "success_rate": "100.0%",
+  "test_results": [
+    {
+      "test": "Root Endpoint",
+      "success": true,
+      "details": "Status: 200, Response: {'message': 'Chat API is running'}",
+      "timestamp": "2025-12-12T23:41:10.433686"
+    },
+    {
+      "test": "Chat Endpoint",
+      "success": true,
+      "details": "Status: 200, AI Response: Oi! Estou aqui e pronto para ajudar \ud83d\ude0a  \nComo posso te ajudar hoje?...",
+      "timestamp": "2025-12-12T23:41:11.890146"
+    },
+    {
+      "test": "Get Messages",
+      "success": true,
+      "details": "Status: 200, Messages count: 6",
+      "timestamp": "2025-12-12T23:41:11.932949"
+    },
+    {
+      "test": "Clear Messages",
+      "success": true,
+      "details": "Status: 200, Deleted: 6 messages",
+      "timestamp": "2025-12-12T23:41:11.970292"
+    },
+    {
+      "test": "Clear Messages",
+      "success": true,
+      "details": "Status: 200, Deleted: 0 messages",
+      "timestamp": "2025-12-12T23:41:12.010473"
+    },
+    {
+      "test": "Chat Endpoint",
+      "success": true,
+      "details": "Status: 200, AI Response: Recebido \ud83d\ude42  \nPosso te ajudar com alguma d\u00favida ou tarefa agora?...",
+      "timestamp": "2025-12-12T23:41:12.864038"
+    },
+    {
+      "test": "Get Messages",
+      "success": true,
+      "details": "Status: 200, Messages count: 2",
+      "timestamp": "2025-12-12T23:41:13.902791"
+    },
+    {
+      "test": "Chat Persistence",
+      "success": true,
+      "details": "Messages saved correctly (2 total)",
+      "timestamp": "2025-12-12T23:41:13.903259"
+    }
+  ]
+}
