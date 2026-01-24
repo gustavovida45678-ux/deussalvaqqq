@@ -3,6 +3,9 @@ import sys
 import json
 from datetime import datetime
 import time
+import base64
+import io
+from PIL import Image
 
 class ChatAPITester:
     def __init__(self, base_url="https://chatbot-pt-1.preview.emergentagent.com"):
