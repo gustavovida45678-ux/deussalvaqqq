@@ -97,6 +97,12 @@ function App() {
   }, []);
 
   const handleImageFile = (file) => {
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Por favor, selecione apenas arquivos de imagem (PNG, JPG, WEBP, etc.)");
+      return;
+    }
+    
     setSelectedImage(file);
     const reader = new FileReader();
     reader.onloadend = () => {
