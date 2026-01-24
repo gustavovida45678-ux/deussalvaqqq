@@ -96,15 +96,19 @@ function App() {
     };
   }, []);
 
+  const handleImageFile = (file) => {
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      handleImageFile(file);
     }
   };
 
