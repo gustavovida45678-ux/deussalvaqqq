@@ -8,85 +8,85 @@
       "test": "Root Endpoint",
       "success": true,
       "details": "Status: 200, Response: {'message': 'Chat API is running'}",
-      "timestamp": "2026-01-24T09:12:08.957205"
+      "timestamp": "2026-01-24T13:54:34.175346"
     },
     {
       "test": "Chat Endpoint",
       "success": true,
       "details": "Status: 200, AI Response: Oi! Estou bem, obrigado por perguntar \ud83d\ude0a  \nE voc\u00ea, como est\u00e1?...",
-      "timestamp": "2026-01-24T09:12:09.942781"
+      "timestamp": "2026-01-24T13:54:34.914106"
     },
     {
       "test": "Get Messages",
       "success": true,
-      "details": "Status: 200, Messages count: 26",
-      "timestamp": "2026-01-24T09:12:09.979791"
+      "details": "Status: 200, Messages count: 12",
+      "timestamp": "2026-01-24T13:54:34.952211"
     },
     {
       "test": "Clear Messages",
       "success": true,
-      "details": "Status: 200, Deleted: 26 messages",
-      "timestamp": "2026-01-24T09:12:10.062589"
+      "details": "Status: 200, Deleted: 12 messages",
+      "timestamp": "2026-01-24T13:54:35.027889"
     },
     {
       "test": "Clear Messages",
       "success": true,
       "details": "Status: 200, Deleted: 0 messages",
-      "timestamp": "2026-01-24T09:12:10.106678"
+      "timestamp": "2026-01-24T13:54:35.061293"
     },
     {
       "test": "Chat Endpoint",
       "success": true,
-      "details": "Status: 200, AI Response: Recebido \ud83d\ude42  \nPosso te ajudar com alguma coisa espec\u00edfica?...",
-      "timestamp": "2026-01-24T09:12:10.859628"
+      "details": "Status: 200, AI Response: Recebido. Estou aqui e funcionando normalmente \u00e0s 13:54:35. Como posso ajudar voc\u00ea agora?...",
+      "timestamp": "2026-01-24T13:54:36.069349"
     },
     {
       "test": "Get Messages",
       "success": true,
       "details": "Status: 200, Messages count: 2",
-      "timestamp": "2026-01-24T09:12:11.897325"
+      "timestamp": "2026-01-24T13:54:37.104728"
     },
     {
       "test": "Chat Persistence",
       "success": true,
       "details": "Messages saved correctly (2 total)",
-      "timestamp": "2026-01-24T09:12:11.897974"
+      "timestamp": "2026-01-24T13:54:37.105395"
     },
     {
       "test": "Image Analysis Endpoint",
       "success": true,
-      "details": "Status: 200, Image ID: bad77fab-e01f-4f24-92e8-ab1bb19b804e, AI Response: A imagem mostra um fundo totalmente branco com tr\u00eas formas geom\u00e9tricas bem simples:\n\n- Na parte supe...",
-      "timestamp": "2026-01-24T09:12:13.790720"
+      "details": "Status: 200, Image ID: 404d3a79-7492-416c-85df-f337c6aa5ee5, AI Response: A imagem mostra um fundo totalmente branco com tr\u00eas formas geom\u00e9tricas coloridas:\n\n- Na parte superi...",
+      "timestamp": "2026-01-24T13:54:39.525681"
     },
     {
       "test": "Image File Validation",
       "success": true,
       "details": "Status: 400, Correct error message: Arquivo n\u00e3o \u00e9 uma imagem v\u00e1lida",
-      "timestamp": "2026-01-24T09:12:13.829754"
+      "timestamp": "2026-01-24T13:54:39.583293"
     },
     {
       "test": "Clear Messages",
       "success": true,
       "details": "Status: 200, Deleted: 4 messages",
-      "timestamp": "2026-01-24T09:12:13.864897"
+      "timestamp": "2026-01-24T13:54:39.627616"
     },
     {
       "test": "Image Analysis Endpoint",
       "success": true,
-      "details": "Status: 200, Image ID: cd6f9e11-58d5-4277-a8c2-bc2acfcd3b3f, AI Response: A imagem tem fundo branco e tr\u00eas ret\u00e2ngulos coloridos:\n\n- Um ret\u00e2ngulo grande na parte superior, em ...",
-      "timestamp": "2026-01-24T09:12:15.315233"
+      "details": "Status: 200, Image ID: ba1bbc79-36ef-47cd-8c50-edff2302e893, AI Response: A imagem tem fundo totalmente branco e tr\u00eas ret\u00e2ngulos coloridos:\n\n- Um ret\u00e2ngulo grande, na parte s...",
+      "timestamp": "2026-01-24T13:54:41.481402"
     },
     {
       "test": "Get Messages",
       "success": true,
       "details": "Status: 200, Messages count: 2",
-      "timestamp": "2026-01-24T09:12:17.352001"
+      "timestamp": "2026-01-24T13:54:43.515309"
     },
     {
       "test": "Image Persistence",
       "success": true,
       "details": "Image messages saved correctly (2 total)",
-      "timestamp": "2026-01-24T09:12:17.352675"
+      "timestamp": "2026-01-24T13:54:43.515853"
     }
   ]
 }
