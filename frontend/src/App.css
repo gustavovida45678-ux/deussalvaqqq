@@ -309,3 +309,57 @@
   color: white;
   font-weight: 600;
 }
+
+/* Drag and drop overlay */
+.drag-drop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  color: #7c3aed;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.drag-drop-content svg {
+  filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.5));
+}
+
+.drag-drop-content p {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+.tip-text {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #71717a;
+  font-style: italic;
+}
