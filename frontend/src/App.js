@@ -281,20 +281,35 @@ function App() {
           ref={fileInputRef}
           onChange={handleImageSelect}
           accept="image/*"
+          multiple
           style={{ display: "none" }}
         />
 
-        {imagePreview && (
-          <div className="image-preview-container">
-            <img src={imagePreview} alt="Preview" className="image-preview" />
-            <button
-              type="button"
-              onClick={clearImage}
-              className="clear-image-btn"
-              data-testid="clear-image-btn"
-            >
-              <X size={16} />
-            </button>
+        {imagePreviews.length > 0 && (
+          <div className="images-preview-container">
+            {imagePreviews.map((img, index) => (
+              <div key={index} className="image-preview-wrapper">
+                <img src={img.preview} alt={`Preview ${index + 1}`} className="image-preview" />
+                <button
+                  type="button"
+                  onClick={() => clearImage(index)}
+                  className="clear-image-btn"
+                  data-testid={`clear-image-btn-${index}`}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            {imagePreviews.length > 1 && (
+              <button
+                type="button"
+                onClick={clearAllImages}
+                className="clear-all-btn"
+                data-testid="clear-all-images-btn"
+              >
+                Limpar Todas
+              </button>
+            )}
           </div>
         )}
 
@@ -304,8 +319,12 @@ function App() {
           className="image-upload-btn"
           disabled={isLoading}
           data-testid="image-upload-btn"
+          title="Adicionar imagens (múltiplas)"
         >
           <ImageIcon size={20} />
+          {imagePreviews.length > 0 && (
+            <span className="image-count">{imagePreviews.length}</span>
+          )}
         </button>
 
         <input
@@ -314,13 +333,17 @@ function App() {
           data-testid="message-input"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Digite sua mensagem ou envie uma imagem..."
+          placeholder={
+            imagePreviews.length > 0
+              ? `${imagePreviews.length} imagem(ns) selecionada(s)...`
+              : "Digite sua mensagem ou envie imagens..."
+          }
           disabled={isLoading}
         />
         <button
           type="submit"
           data-testid="send-button"
-          disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
+          disabled={isLoading || (!inputMessage.trim() && selectedImages.length === 0)}
         >
           <Send size={18} />
           Enviar
