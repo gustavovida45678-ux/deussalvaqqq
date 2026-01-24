@@ -485,7 +485,7 @@ function App() {
         <button
           type="submit"
           data-testid="send-button"
-          disabled={isLoading || (!inputMessage.trim() && selectedImages.length === 0)}
+          disabled={isLoading || isGeneratingImage || (!inputMessage.trim() && selectedImages.length === 0)}
         >
           <Send size={18} />
           Enviar
