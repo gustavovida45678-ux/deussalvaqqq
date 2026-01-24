@@ -275,6 +275,59 @@ function App() {
         </div>
       )}
 
+      {/* Image generation modal */}
+      {showImageGenModal && (
+        <div className="modal-overlay" onClick={() => setShowImageGenModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🎨 Gerar Imagem com IA</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowImageGenModal(false)}
+                data-testid="close-modal-btn"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">
+                Descreva a imagem que deseja criar. Seja o mais específico possível para melhores resultados.
+              </p>
+              <textarea
+                value={imageGenPrompt}
+                onChange={(e) => setImageGenPrompt(e.target.value)}
+                placeholder="Ex: Uma paisagem futurista com montanhas flutuantes e cachoeiras luminosas ao pôr do sol..."
+                className="image-gen-textarea"
+                rows={4}
+                data-testid="image-gen-prompt"
+                autoFocus
+              />
+              <div className="modal-footer">
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowImageGenModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    if (imageGenPrompt.trim()) {
+                      handleGenerateImage(imageGenPrompt.trim());
+                    }
+                  }}
+                  disabled={!imageGenPrompt.trim()}
+                  data-testid="generate-image-btn"
+                >
+                  <Sparkles size={18} />
+                  Gerar Imagem
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {messages.length === 0 && !isLoading ? (
         <div className="empty-state">
           <h1 data-testid="welcome-heading">Chat GPT</h1>
