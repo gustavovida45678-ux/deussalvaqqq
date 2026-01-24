@@ -58,6 +58,17 @@ class MultipleImagesAnalysisResponse(BaseModel):
     user_message: Message
     assistant_message: Message
 
+class ImageGenerationRequest(BaseModel):
+    prompt: str
+    number_of_images: int = 1
+
+class ImageGenerationResponse(BaseModel):
+    image_id: str
+    image_path: str
+    image_base64: str
+    user_message: Message
+    assistant_message: Message
+
 
 # Chat endpoint
 @api_router.post("/chat", response_model=ChatResponse)
