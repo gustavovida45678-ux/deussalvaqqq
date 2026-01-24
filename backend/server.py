@@ -397,6 +397,77 @@ Responda SEMPRE em português brasileiro de forma profissional."""
         raise HTTPException(status_code=500, detail=f"Error analyzing images: {str(e)}")
 
         # Create image content
+
+
+# Image generation endpoint
+@api_router.post("/generate-image", response_model=ImageGenerationResponse)
+async def generate_image(request: ImageGenerationRequest):
+    try:
+        # Initialize image generator
+        image_gen = OpenAIImageGeneration(api_key=os.environ['EMERGENT_LLM_KEY'])
+        
+        # Create user message
+        user_message = Message(
+            role="user",
+            content=f"🎨 Gerar imagem: {request.prompt}"
+        )
+        
+        # Save user message to database
+        user_doc = user_message.model_dump()
+        user_doc['timestamp'] = user_doc['timestamp'].isoformat()
+        await db.messages.insert_one(user_doc)
+        
+        # Generate image
+        images = await image_gen.generate_images(
+            prompt=request.prompt,
+            model="gpt-image-1",
+            number_of_images=request.number_of_images
+        )
+        
+        if not images or len(images) == 0:
+            raise HTTPException(status_code=500, detail="Nenhuma imagem foi gerada")
+        
+        # Get first image
+        image_bytes = images[0]
+        
+        # Convert to base64
+        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        
+        # Save image locally
+        os.makedirs("uploads", exist_ok=True)
+        image_id = str(uuid.uuid4())
+        image_filename = f"{image_id}_generated.png"
+        image_path = f"uploads/{image_filename}"
+        
+        with open(image_path, "wb") as f:
+            f.write(image_bytes)
+        
+        # Create assistant message with generated image
+        assistant_message = Message(
+            role="assistant",
+            content=f"✅ Imagem gerada com sucesso a partir do prompt:\n\n**{request.prompt}**",
+            image_urls=[f"/uploads/{image_filename}"]
+        )
+        
+        # Save assistant message to database
+        assistant_doc = assistant_message.model_dump()
+        assistant_doc['timestamp'] = assistant_doc['timestamp'].isoformat()
+        await db.messages.insert_one(assistant_doc)
+        
+        return ImageGenerationResponse(
+            image_id=image_id,
+            image_path=image_path,
+            image_base64=image_base64,
+            user_message=user_message,
+            assistant_message=assistant_message
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error in image generation endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
+
         image_content = ImageContent(image_base64=image_base64)
         
         # Send message with image to AI
