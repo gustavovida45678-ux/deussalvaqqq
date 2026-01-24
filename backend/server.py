@@ -216,6 +216,39 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
         )
         chat_client.with_model("openai", "gpt-5.1")
         
+        # Create image content
+        image_content = ImageContent(image_base64=image_base64)
+        
+        # Send message with image to AI
+        user_msg = UserMessage(
+            text=question,
+            file_contents=[image_content]
+        )
+        ai_response = await chat_client.send_message(user_msg)
+        
+        # Create assistant message
+        assistant_message = Message(
+            role="assistant",
+            content=ai_response
+        )
+        
+        # Save assistant message to database
+        assistant_doc = assistant_message.model_dump()
+        assistant_doc['timestamp'] = assistant_doc['timestamp'].isoformat()
+        await db.messages.insert_one(assistant_doc)
+        
+        return ImageAnalysisResponse(
+            image_id=image_id,
+            image_path=image_path,
+            user_message=user_message,
+            assistant_message=assistant_message
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error in image analysis endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
 
 
 # Multiple images analysis endpoint
