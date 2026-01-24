@@ -140,20 +140,22 @@ function App() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if ((!inputMessage.trim() && !selectedImage) || isLoading) return;
+    if ((!inputMessage.trim() && selectedImages.length === 0) || isLoading) return;
 
-    const userMessage = inputMessage.trim() || "Analise esta imagem";
+    const userMessage = inputMessage.trim() || "Analise estas imagens";
     setInputMessage("");
     setIsLoading(true);
 
     try {
-      if (selectedImage) {
-        // Send image with message
+      if (selectedImages.length > 0) {
+        // Send images with message
         const formData = new FormData();
-        formData.append("file", selectedImage);
+        selectedImages.forEach((image, index) => {
+          formData.append("files", image);
+        });
         formData.append("question", userMessage);
 
-        const response = await axios.post(`${API}/chat/image`, formData, {
+        const response = await axios.post(`${API}/chat/images`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -164,7 +166,7 @@ function App() {
           response.data.user_message,
           response.data.assistant_message,
         ]);
-        clearImage();
+        clearAllImages();
       } else {
         // Send text only
         const response = await axios.post(`${API}/chat`, {
@@ -196,7 +198,7 @@ function App() {
           timestamp: new Date().toISOString(),
         },
       ]);
-      clearImage();
+      clearAllImages();
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
