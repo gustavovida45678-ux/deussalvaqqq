@@ -51,6 +51,12 @@ class ImageAnalysisResponse(BaseModel):
     user_message: Message
     assistant_message: Message
 
+class MultipleImagesAnalysisResponse(BaseModel):
+    image_ids: List[str]
+    image_paths: List[str]
+    user_message: Message
+    assistant_message: Message
+
 
 # Chat endpoint
 @api_router.post("/chat", response_model=ChatResponse)
