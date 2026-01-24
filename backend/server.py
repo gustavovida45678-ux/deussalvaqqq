@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Form
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +6,11 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import base64
+from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 
 
 ROOT_DIR = Path(__file__).parent
@@ -34,12 +35,19 @@ class Message(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: str  # 'user' or 'assistant'
     content: str
+    image_url: Optional[str] = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ChatRequest(BaseModel):
     message: str
 
 class ChatResponse(BaseModel):
+    user_message: Message
+    assistant_message: Message
+
+class ImageAnalysisResponse(BaseModel):
+    image_id: str
+    image_path: str
     user_message: Message
     assistant_message: Message
 
@@ -90,6 +98,91 @@ async def chat(request: ChatRequest):
     except Exception as e:
         logging.error(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+
+
+# Image analysis endpoint
+@api_router.post("/chat/image", response_model=ImageAnalysisResponse)
+async def analyze_image(
+    file: UploadFile = File(...),
+    question: str = Form(default="Descreva a imagem detalhadamente em português")
+):
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Arquivo não é uma imagem válida")
+        
+        # Read image
+        image_bytes = await file.read()
+        
+        # Validate image is not empty
+        if len(image_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Imagem está vazia")
+        
+        # Convert to base64
+        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+        
+        # Save image locally
+        os.makedirs("uploads", exist_ok=True)
+        image_id = str(uuid.uuid4())
+        image_filename = f"{image_id}_{file.filename}"
+        image_path = f"uploads/{image_filename}"
+        
+        with open(image_path, "wb") as f:
+            f.write(image_bytes)
+        
+        # Create user message with image
+        user_message = Message(
+            role="user",
+            content=question,
+            image_url=f"/uploads/{image_filename}"
+        )
+        
+        # Save user message to database
+        user_doc = user_message.model_dump()
+        user_doc['timestamp'] = user_doc['timestamp'].isoformat()
+        await db.messages.insert_one(user_doc)
+        
+        # Initialize LLM chat with vision model
+        chat_client = LlmChat(
+            api_key=os.environ['EMERGENT_LLM_KEY'],
+            session_id="vision-session",
+            system_message="Você é um assistente de análise de imagens. Descreva as imagens em português de forma detalhada e útil."
+        )
+        chat_client.with_model("openai", "gpt-5.1")
+        
+        # Create image content
+        image_content = ImageContent(image_base64=image_base64)
+        
+        # Send message with image to AI
+        user_msg = UserMessage(
+            text=question,
+            file_contents=[image_content]
+        )
+        ai_response = await chat_client.send_message(user_msg)
+        
+        # Create assistant message
+        assistant_message = Message(
+            role="assistant",
+            content=ai_response
+        )
+        
+        # Save assistant message to database
+        assistant_doc = assistant_message.model_dump()
+        assistant_doc['timestamp'] = assistant_doc['timestamp'].isoformat()
+        await db.messages.insert_one(assistant_doc)
+        
+        return ImageAnalysisResponse(
+            image_id=image_id,
+            image_path=image_path,
+            user_message=user_message,
+            assistant_message=assistant_message
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error in image analysis endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
 
 
 @api_router.get("/messages", response_model=List[Message])

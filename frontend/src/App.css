@@ -40,6 +40,14 @@
   animation: slideInLeft 0.3s ease-out;
 }
 
+.message-image {
+  max-width: 100%;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  max-height: 400px;
+  object-fit: contain;
+}
+
 .input-command-bar {
   position: fixed;
   bottom: 2rem;
@@ -65,7 +73,65 @@
   box-shadow: 0 0 30px -10px rgba(124, 58, 237, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.input-command-bar input {
+.image-upload-btn {
+  background: transparent;
+  color: #a1a1aa;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-upload-btn:hover:not(:disabled) {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.image-upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.image-preview-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.image-preview {
+  height: 60px;
+  width: 60px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 2px solid rgba(124, 58, 237, 0.3);
+}
+
+.clear-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clear-image-btn:hover {
+  background: #dc2626;
+}
+
+.input-command-bar input[type="text"] {
   flex: 1;
   background: transparent;
   border: none;
@@ -75,11 +141,11 @@
   padding: 0.75rem 1rem;
 }
 
-.input-command-bar input::placeholder {
+.input-command-bar input[type="text"]::placeholder {
   color: #71717a;
 }
 
-.input-command-bar button {
+.input-command-bar button[type="submit"] {
   background: #7c3aed;
   color: white;
   border: none;
@@ -93,12 +159,12 @@
   gap: 0.5rem;
 }
 
-.input-command-bar button:hover:not(:disabled) {
+.input-command-bar button[type="submit"]:hover:not(:disabled) {
   background: #6d28d9;
   transform: scale(1.02);
 }
 
-.input-command-bar button:disabled {
+.input-command-bar button[type="submit"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

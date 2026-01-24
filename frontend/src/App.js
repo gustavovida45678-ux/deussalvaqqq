@@ -3,7 +3,7 @@ import "@/App.css";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Send } from "lucide-react";
+import { Send, Image as ImageIcon, X } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -12,8 +12,11 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,24 +39,65 @@ function App() {
     loadMessages();
   }, []);
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if ((!inputMessage.trim() && !selectedImage) || isLoading) return;
 
-    const userMessage = inputMessage.trim();
+    const userMessage = inputMessage.trim() || "Analise esta imagem";
     setInputMessage("");
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API}/chat`, {
-        message: userMessage,
-      });
+      if (selectedImage) {
+        // Send image with message
+        const formData = new FormData();
+        formData.append("file", selectedImage);
+        formData.append("question", userMessage);
 
-      setMessages((prev) => [
-        ...prev,
-        response.data.user_message,
-        response.data.assistant_message,
-      ]);
+        const response = await axios.post(`${API}/chat/image`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        setMessages((prev) => [
+          ...prev,
+          response.data.user_message,
+          response.data.assistant_message,
+        ]);
+        clearImage();
+      } else {
+        // Send text only
+        const response = await axios.post(`${API}/chat`, {
+          message: userMessage,
+        });
+
+        setMessages((prev) => [
+          ...prev,
+          response.data.user_message,
+          response.data.assistant_message,
+        ]);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       // Add error message
@@ -68,10 +112,12 @@ function App() {
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
+          content:
+            "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
           timestamp: new Date().toISOString(),
         },
       ]);
+      clearImage();
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -81,12 +127,12 @@ function App() {
   return (
     <div className="App neural-void-bg">
       <div className="noise-overlay" />
-      
+
       {messages.length === 0 && !isLoading ? (
         <div className="empty-state">
           <h1 data-testid="welcome-heading">Chat GPT</h1>
           <p data-testid="welcome-message">
-            Bem-vindo! Comece uma conversa digitando sua mensagem abaixo.
+            Bem-vindo! Comece uma conversa digitando sua mensagem ou enviando uma imagem.
           </p>
         </div>
       ) : (
@@ -101,6 +147,13 @@ function App() {
                   : "message-bubble-ai"
               }
             >
+              {message.image_url && (
+                <img
+                  src={`${BACKEND_URL}${message.image_url}`}
+                  alt="Uploaded"
+                  className="message-image"
+                />
+              )}
               {message.role === "user" ? (
                 <div>{message.content}</div>
               ) : (
@@ -110,7 +163,7 @@ function App() {
               )}
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="typing-indicator" data-testid="typing-indicator">
               <div className="typing-dot"></div>
@@ -118,25 +171,61 @@ function App() {
               <div className="typing-dot"></div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="input-command-bar" data-testid="chat-form">
+      <form
+        onSubmit={handleSendMessage}
+        className="input-command-bar"
+        data-testid="chat-form"
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageSelect}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
+
+        {imagePreview && (
+          <div className="image-preview-container">
+            <img src={imagePreview} alt="Preview" className="image-preview" />
+            <button
+              type="button"
+              onClick={clearImage}
+              className="clear-image-btn"
+              data-testid="clear-image-btn"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="image-upload-btn"
+          disabled={isLoading}
+          data-testid="image-upload-btn"
+        >
+          <ImageIcon size={20} />
+        </button>
+
         <input
           ref={inputRef}
           type="text"
           data-testid="message-input"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Digite sua mensagem..."
+          placeholder="Digite sua mensagem ou envie uma imagem..."
           disabled={isLoading}
         />
         <button
           type="submit"
           data-testid="send-button"
-          disabled={isLoading || !inputMessage.trim()}
+          disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
         >
           <Send size={18} />
           Enviar
