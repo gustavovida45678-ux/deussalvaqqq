@@ -390,6 +390,14 @@ function App() {
             </div>
           )}
 
+          {isGeneratingImage && (
+            <div className="generating-indicator" data-testid="generating-indicator">
+              <Sparkles className="sparkle-icon" size={32} />
+              <p>Gerando imagem com IA...</p>
+              <span className="generating-subtext">Isso pode levar até 1 minuto</span>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
       )}
