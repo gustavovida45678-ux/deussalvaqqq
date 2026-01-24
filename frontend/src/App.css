@@ -84,6 +84,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .image-upload-btn:hover:not(:disabled) {
@@ -96,7 +97,32 @@
   cursor: not-allowed;
 }
 
-.image-preview-container {
+.image-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #7c3aed;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.images-preview-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  max-width: 400px;
+}
+
+.image-preview-wrapper {
   position: relative;
   display: flex;
   align-items: center;
