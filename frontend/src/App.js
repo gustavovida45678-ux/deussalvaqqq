@@ -189,11 +189,25 @@ function App() {
     <div className="App neural-void-bg">
       <div className="noise-overlay" />
 
+      {/* Drag and drop overlay */}
+      {isDragging && (
+        <div className="drag-drop-overlay" data-testid="drag-drop-overlay">
+          <div className="drag-drop-content">
+            <ImageIcon size={64} />
+            <p>Solte a imagem aqui</p>
+          </div>
+        </div>
+      )}
+
       {messages.length === 0 && !isLoading ? (
         <div className="empty-state">
           <h1 data-testid="welcome-heading">Chat GPT</h1>
           <p data-testid="welcome-message">
             Bem-vindo! Comece uma conversa digitando sua mensagem ou enviando uma imagem.
+            <br />
+            <span className="tip-text">
+              💡 Você também pode arrastar imagens ou usar Ctrl+V para colar
+            </span>
           </p>
         </div>
       ) : (
