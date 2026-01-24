@@ -104,7 +104,7 @@ async def chat(request: ChatRequest):
 @api_router.post("/chat/image", response_model=ImageAnalysisResponse)
 async def analyze_image(
     file: UploadFile = File(...),
-    question: str = Form(default="Descreva a imagem detalhadamente em português")
+    question: str = Form(default="Faça uma análise técnica completa deste gráfico: identifique o ativo, timeframe, tendência, padrões de candlestick, níveis de suporte/resistência, indicadores visíveis, e forneça projeções com estimativas de próximos movimentos, incluindo probabilidades e recomendações de entrada (COMPRA/VENDA) com níveis de stop loss e take profit.")
 ):
     try:
         # Validate file type
