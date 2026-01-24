@@ -157,6 +157,23 @@
   background: #dc2626;
 }
 
+.clear-all-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.clear-all-btn:hover {
+  background: #dc2626;
+}
+
 .input-command-bar input[type="text"] {
   flex: 1;
   background: transparent;
