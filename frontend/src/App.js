@@ -448,7 +448,7 @@ function App() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="image-upload-btn"
-          disabled={isLoading}
+          disabled={isLoading || isGeneratingImage}
           data-testid="image-upload-btn"
           title="Adicionar imagens (múltiplas)"
         >
@@ -456,6 +456,17 @@ function App() {
           {imagePreviews.length > 0 && (
             <span className="image-count">{imagePreviews.length}</span>
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowImageGenModal(true)}
+          className="image-gen-btn"
+          disabled={isLoading || isGeneratingImage}
+          data-testid="image-gen-open-btn"
+          title="Gerar imagem com IA"
+        >
+          <Sparkles size={20} />
         </button>
 
         <input
