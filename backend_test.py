@@ -380,26 +380,27 @@ class ChatAPITester:
 
     def run_all_tests(self):
         """Run all backend tests"""
-        print("🚀 Starting Chat API Backend Tests")
+        print("🚀 Starting Chat API Backend Tests (Including Image Analysis)")
         print(f"Testing against: {self.base_url}")
-        print("=" * 50)
+        print("=" * 60)
         
         # Test basic connectivity
         if not self.test_root_endpoint():
             print("❌ Root endpoint failed - stopping tests")
             return self.get_summary()
         
-        # Test chat functionality
+        # Test existing chat functionality
+        print("\n📝 Testing Text Chat Functionality...")
         self.test_chat_endpoint()
-        
-        # Test message retrieval
         self.test_get_messages()
-        
-        # Test message clearing
         self.test_clear_messages()
-        
-        # Test end-to-end persistence
         self.test_chat_persistence()
+        
+        # Test new image analysis functionality
+        print("\n🖼️ Testing Image Analysis Functionality...")
+        self.test_image_analysis_endpoint()
+        self.test_image_file_validation()
+        self.test_image_persistence()
         
         return self.get_summary()
 
