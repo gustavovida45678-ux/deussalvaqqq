@@ -140,7 +140,7 @@ async def analyze_image(
         user_message = Message(
             role="user",
             content=question,
-            image_url=f"/uploads/{image_filename}"
+            image_urls=[f"/uploads/{image_filename}"]
         )
         
         # Save user message to database
