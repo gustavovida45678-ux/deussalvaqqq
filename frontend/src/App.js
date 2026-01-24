@@ -336,6 +336,8 @@ function App() {
             <br />
             <span className="tip-text">
               💡 Você também pode arrastar imagens ou usar Ctrl+V para colar
+              <br />
+              🎨 Use /gerar [descrição] para criar imagens com IA
             </span>
           </p>
         </div>
