@@ -15,6 +15,9 @@ function App() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [showImageGenModal, setShowImageGenModal] = useState(false);
+  const [imageGenPrompt, setImageGenPrompt] = useState("");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
