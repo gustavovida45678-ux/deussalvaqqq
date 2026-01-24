@@ -35,7 +35,7 @@ class Message(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: str  # 'user' or 'assistant'
     content: str
-    image_url: Optional[str] = None
+    image_urls: Optional[List[str]] = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ChatRequest(BaseModel):
