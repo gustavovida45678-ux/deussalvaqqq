@@ -242,6 +242,18 @@ function App() {
                   : "message-bubble-ai"
               }
             >
+              {message.image_urls && message.image_urls.length > 0 && (
+                <div className="message-images-grid">
+                  {message.image_urls.map((url, idx) => (
+                    <img
+                      key={idx}
+                      src={`${BACKEND_URL}${url}`}
+                      alt={`Uploaded ${idx + 1}`}
+                      className="message-image"
+                    />
+                  ))}
+                </div>
+              )}
               {message.image_url && (
                 <img
                   src={`${BACKEND_URL}${message.image_url}`}
