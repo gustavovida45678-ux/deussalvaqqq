@@ -216,6 +216,141 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
         )
         chat_client.with_model("openai", "gpt-5.1")
         
+
+
+# Multiple images analysis endpoint
+@api_router.post("/chat/images", response_model=MultipleImagesAnalysisResponse)
+async def analyze_multiple_images(
+    files: List[UploadFile] = File(...),
+    question: str = Form(default="Faça uma análise técnica completa comparativa destes gráficos: para cada imagem, identifique o ativo, timeframe, tendência, padrões, níveis chave, e forneça uma análise consolidada com recomendações gerais considerando todos os gráficos.")
+):
+    try:
+        if not files or len(files) == 0:
+            raise HTTPException(status_code=400, detail="Nenhuma imagem foi enviada")
+        
+        # Validate all files are images
+        for file in files:
+            if not file.content_type or not file.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail=f"Arquivo {file.filename} não é uma imagem válida")
+        
+        image_ids = []
+        image_paths = []
+        image_contents = []
+        image_urls = []
+        
+        # Process all images
+        for file in files:
+            # Read image
+            image_bytes = await file.read()
+            
+            # Validate image is not empty
+            if len(image_bytes) == 0:
+                raise HTTPException(status_code=400, detail=f"Imagem {file.filename} está vazia")
+            
+            # Convert to base64
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            
+            # Save image locally
+            os.makedirs("uploads", exist_ok=True)
+            image_id = str(uuid.uuid4())
+            image_filename = f"{image_id}_{file.filename}"
+            image_path = f"uploads/{image_filename}"
+            
+            with open(image_path, "wb") as f:
+                f.write(image_bytes)
+            
+            image_ids.append(image_id)
+            image_paths.append(image_path)
+            image_urls.append(f"/uploads/{image_filename}")
+            
+            # Create image content for AI
+            image_content = ImageContent(image_base64=image_base64)
+            image_contents.append(image_content)
+        
+        # Create user message with multiple images
+        user_message = Message(
+            role="user",
+            content=question,
+            image_urls=image_urls
+        )
+        
+        # Save user message to database
+        user_doc = user_message.model_dump()
+        user_doc['timestamp'] = user_doc['timestamp'].isoformat()
+        await db.messages.insert_one(user_doc)
+        
+        # Initialize LLM chat with vision model
+        chat_client = LlmChat(
+            api_key=os.environ['EMERGENT_LLM_KEY'],
+            session_id="vision-multiple-session",
+            system_message="""Você é um analista técnico profissional especializado em análise comparativa de múltiplos gráficos de trading.
+
+INSTRUÇÕES PARA ANÁLISE DE MÚLTIPLOS GRÁFICOS:
+
+1. Para cada imagem/gráfico recebido:
+   - Identifique o ativo, timeframe, preço atual
+   - Faça uma análise técnica individual resumida
+
+2. Análise Comparativa:
+   - Compare tendências entre os diferentes ativos/timeframes
+   - Identifique correlações ou divergências
+   - Note diferenças significativas em força de tendência
+
+3. Síntese e Recomendações:
+   - Forneça uma visão consolidada do mercado
+   - Identifique qual ativo/timeframe apresenta melhor oportunidade
+   - Dê recomendações priorizadas (qual operar primeiro)
+   - Inclua níveis chave e gestão de risco global
+
+Use formato:
+## Imagem 1: [Ativo] [Timeframe]
+- Análise técnica resumida
+- Tendência, níveis, oportunidade
+
+## Imagem 2: [Ativo] [Timeframe]
+...
+
+## Análise Comparativa
+...
+
+## Recomendações Prioritárias
+...
+
+Responda SEMPRE em português brasileiro de forma profissional."""
+        )
+        chat_client.with_model("openai", "gpt-5.1")
+        
+        # Send message with all images to AI
+        user_msg = UserMessage(
+            text=question,
+            file_contents=image_contents
+        )
+        ai_response = await chat_client.send_message(user_msg)
+        
+        # Create assistant message
+        assistant_message = Message(
+            role="assistant",
+            content=ai_response
+        )
+        
+        # Save assistant message to database
+        assistant_doc = assistant_message.model_dump()
+        assistant_doc['timestamp'] = assistant_doc['timestamp'].isoformat()
+        await db.messages.insert_one(assistant_doc)
+        
+        return MultipleImagesAnalysisResponse(
+            image_ids=image_ids,
+            image_paths=image_paths,
+            user_message=user_message,
+            assistant_message=assistant_message
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error in multiple images analysis endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing images: {str(e)}")
+
         # Create image content
         image_content = ImageContent(image_base64=image_base64)
         
