@@ -146,6 +146,19 @@ function App() {
     if ((!inputMessage.trim() && selectedImages.length === 0) || isLoading) return;
 
     const userMessage = inputMessage.trim() || "Analise estas imagens";
+    
+    // Check if user wants to generate an image with commands like "/gerar", "/imagem", etc.
+    if (userMessage.toLowerCase().startsWith("/gerar ") || 
+        userMessage.toLowerCase().startsWith("/imagem ") ||
+        userMessage.toLowerCase().startsWith("/criar ")) {
+      const prompt = userMessage.split(" ").slice(1).join(" ");
+      if (prompt) {
+        handleGenerateImage(prompt);
+        setInputMessage("");
+        return;
+      }
+    }
+    
     setInputMessage("");
     setIsLoading(true);
 
@@ -204,6 +217,46 @@ function App() {
       clearAllImages();
     } finally {
       setIsLoading(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleGenerateImage = async (prompt) => {
+    setIsGeneratingImage(true);
+    setShowImageGenModal(false);
+    setImageGenPrompt("");
+
+    try {
+      const response = await axios.post(`${API}/generate-image`, {
+        prompt: prompt,
+        number_of_images: 1,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        response.data.user_message,
+        response.data.assistant_message,
+      ]);
+    } catch (error) {
+      console.error("Error generating image:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "user",
+          content: `🎨 Gerar imagem: ${prompt}`,
+          timestamp: new Date().toISOString(),
+        },
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content:
+            "Desculpe, ocorreu um erro ao gerar a imagem. Por favor, tente novamente.",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setIsGeneratingImage(false);
       inputRef.current?.focus();
     }
   };
