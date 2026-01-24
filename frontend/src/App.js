@@ -103,18 +103,28 @@ function App() {
       return;
     }
     
-    setSelectedImage(file);
+    // Add to existing images
+    setSelectedImages(prev => [...prev, file]);
+    
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImagePreview(reader.result);
+      setImagePreviews(prev => [...prev, { file: file.name, preview: reader.result }]);
     };
     reader.readAsDataURL(file);
   };
 
+  const handleMultipleFiles = (files) => {
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith("image/")) {
+        handleImageFile(file);
+      }
+    });
+  };
+
   const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleImageFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleMultipleFiles(files);
     }
   };
 
