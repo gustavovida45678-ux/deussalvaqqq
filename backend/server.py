@@ -294,8 +294,17 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error in image analysis endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
+        error_msg = str(e)
+        logging.error(f"Error in image analysis endpoint: {error_msg}")
+        
+        # Check if it's a budget error
+        if "Budget has been exceeded" in error_msg or "budget" in error_msg.lower():
+            raise HTTPException(
+                status_code=402,  # Payment Required
+                detail="❌ Orçamento da chave LLM excedido! Por favor, adicione créditos em Profile -> Universal Key -> Add Balance"
+            )
+        
+        raise HTTPException(status_code=500, detail=f"Error analyzing image: {error_msg}")
 
 
 # Multiple images analysis endpoint
