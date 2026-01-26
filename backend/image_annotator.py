@@ -1,12 +1,18 @@
 """
 Image Annotator for Trading Chart Analysis
 Adds visual annotations to trading charts based on AI analysis
+Enhanced with OCR and advanced pattern detection
 """
 from PIL import Image, ImageDraw, ImageFont
 import io
 import base64
 from typing import Dict, List, Tuple, Optional
 import re
+import numpy as np
+import cv2
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ChartAnnotator:
