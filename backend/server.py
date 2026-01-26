@@ -240,6 +240,28 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
         )
         ai_response = await chat_client.send_message(user_msg)
         
+        # Generate annotated image if CALL/PUT recommendation is detected
+        annotated_image_path = None
+        try:
+            annotator = ChartAnnotator()
+            signals = annotator.extract_trading_signals(ai_response)
+            
+            if signals['action'] in ['CALL', 'PUT']:
+                # Create annotated version
+                annotated_bytes = annotator.annotate_chart(image_bytes, ai_response, signals)
+                
+                # Save annotated image
+                annotated_filename = f"{image_id}_annotated.png"
+                annotated_image_path = f"uploads/{annotated_filename}"
+                
+                with open(annotated_image_path, "wb") as f:
+                    f.write(annotated_bytes)
+                
+                logging.info(f"Generated annotated image: {annotated_image_path}")
+        except Exception as e:
+            logging.error(f"Error generating annotated image: {str(e)}")
+            # Continue without annotated image
+        
         # Create assistant message
         assistant_message = Message(
             role="assistant",
@@ -254,6 +276,7 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
         return ImageAnalysisResponse(
             image_id=image_id,
             image_path=image_path,
+            annotated_image_path=f"/uploads/{annotated_filename}" if annotated_image_path else None,
             user_message=user_message,
             assistant_message=assistant_message
         )
