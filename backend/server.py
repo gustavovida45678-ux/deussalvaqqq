@@ -496,10 +496,13 @@ Responda SEMPRE em português brasileiro de forma profissional."""
 
 # Image generation endpoint
 @api_router.post("/generate-image", response_model=ImageGenerationResponse)
-async def generate_image(request: ImageGenerationRequest):
+async def generate_image(request: ImageGenerationRequest, x_custom_api_key: Optional[str] = Header(None)):
     try:
+        # Use custom API key if provided
+        api_key = x_custom_api_key if x_custom_api_key else os.environ['EMERGENT_LLM_KEY']
+        
         # Initialize image generator
-        image_gen = OpenAIImageGeneration(api_key=os.environ['EMERGENT_LLM_KEY'])
+        image_gen = OpenAIImageGeneration(api_key=api_key)
         
         # Create user message
         user_message = Message(
