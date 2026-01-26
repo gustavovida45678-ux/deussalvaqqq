@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { Send, Image as ImageIcon, X, Sparkles, Settings } from "lucide-react";
 import ApiKeySettings from "./components/ApiKeySettings";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 function App() {
