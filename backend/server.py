@@ -318,15 +318,19 @@ Responda SEMPRE em português brasileiro de forma profissional e detalhada."""
 @api_router.post("/chat/images", response_model=MultipleImagesAnalysisResponse)
 async def analyze_multiple_images(
     files: List[UploadFile] = File(...),
-    question: str = Form(default="Faça uma análise técnica completa comparativa destes gráficos: para cada imagem, identifique o ativo, timeframe, tendência, padrões, níveis chave, e forneça uma análise consolidada com recomendações gerais considerando todos os gráficos.")
+    question: str = Form(default="Faça uma análise técnica completa comparativa destes gráficos: para cada imagem, identifique o ativo, timeframe, tendência, padrões, níveis chave, e forneça uma análise consolidada com recomendações gerais considerando todos os gráficos."),
+    x_custom_api_key: Optional[str] = Header(None)
 ):
     try:
+        # Use custom API key if provided
+        api_key = x_custom_api_key if x_custom_api_key else os.environ['EMERGENT_LLM_KEY']
+        
         if not files or len(files) == 0:
             raise HTTPException(status_code=400, detail="Nenhuma imagem foi enviada")
         
         # Validate all files are images
         for file in files:
-            if not file.content_type or not file.content_type.startswith("image/"):
+            if not file.content_type or not file.content_type.startsWith("image/"):
                 raise HTTPException(status_code=400, detail=f"Arquivo {file.filename} não é uma imagem válida")
         
         image_ids = []
