@@ -378,6 +378,24 @@ function App() {
                   className="message-image"
                 />
               )}
+              {/* Show annotated images if available */}
+              {message.annotated_image_urls && message.annotated_image_urls.length > 0 && (
+                <div className="annotated-images-section">
+                  <div className="annotated-label">📊 Análise Visual com Recomendações</div>
+                  <div className="message-images-grid">
+                    {message.annotated_image_urls.map((url, idx) => (
+                      url && (
+                        <img
+                          key={`annotated-${idx}`}
+                          src={`${BACKEND_URL}${url}`}
+                          alt={`Gráfico Anotado ${idx + 1}`}
+                          className="message-image annotated-image"
+                        />
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
               {message.role === "user" ? (
                 <div>{message.content}</div>
               ) : (
