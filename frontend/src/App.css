@@ -657,11 +657,22 @@
   box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
 }
 
 .annotated-image:hover {
   transform: scale(1.02);
   box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+}
+
+/* Ensure annotated images grid shows full images */
+.annotated-images-section .message-images-grid .message-image {
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
 }
 
 /* Settings Modal */
