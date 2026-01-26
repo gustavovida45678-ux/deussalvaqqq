@@ -455,8 +455,6 @@ Responda SEMPRE em português brasileiro de forma profissional."""
         logging.error(f"Error in multiple images analysis endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error analyzing images: {str(e)}")
 
-        # Create image content
-
 
 # Image generation endpoint
 @api_router.post("/generate-image", response_model=ImageGenerationResponse)
