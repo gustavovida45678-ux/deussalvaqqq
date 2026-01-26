@@ -632,3 +632,32 @@
   color: #71717a;
   font-size: 0.875rem;
 }
+
+/* Annotated images section */
+.annotated-images-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(124, 58, 237, 0.2);
+}
+
+.annotated-label {
+  font-weight: 600;
+  color: #c084fc;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+}
+
+.annotated-image {
+  border: 2px solid #7c3aed;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.annotated-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+}
