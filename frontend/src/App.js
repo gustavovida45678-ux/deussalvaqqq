@@ -256,11 +256,20 @@ function App() {
     setShowImageGenModal(false);
     setImageGenPrompt("");
 
+    // Get custom API key if available
+    const customApiKey = localStorage.getItem("user_api_key");
+    const apiProvider = localStorage.getItem("api_provider");
+
     try {
+      const headers = {};
+      if (apiProvider === "custom" && customApiKey) {
+        headers["X-Custom-API-Key"] = customApiKey;
+      }
+
       const response = await axios.post(`${API}/generate-image`, {
         prompt: prompt,
         number_of_images: 1,
-      });
+      }, { headers });
 
       setMessages((prev) => [
         ...prev,
