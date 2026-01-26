@@ -164,6 +164,10 @@ function App() {
     setInputMessage("");
     setIsLoading(true);
 
+    // Get custom API key if available
+    const customApiKey = localStorage.getItem("user_api_key");
+    const apiProvider = localStorage.getItem("api_provider");
+
     try {
       if (selectedImages.length > 0) {
         // Send images with message
@@ -173,11 +177,15 @@ function App() {
         });
         formData.append("question", userMessage);
 
-        const response = await axios.post(`${API}/chat/images`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        // Add custom API key to headers if available
+        const headers = {
+          "Content-Type": "multipart/form-data",
+        };
+        if (apiProvider === "custom" && customApiKey) {
+          headers["X-Custom-API-Key"] = customApiKey;
+        }
+
+        const response = await axios.post(`${API}/chat/images`, formData, { headers });
 
         // Add annotated image URLs to assistant message if available
         const assistantMsg = response.data.assistant_message;
@@ -193,9 +201,14 @@ function App() {
         clearAllImages();
       } else {
         // Send text only
+        const headers = {};
+        if (apiProvider === "custom" && customApiKey) {
+          headers["X-Custom-API-Key"] = customApiKey;
+        }
+
         const response = await axios.post(`${API}/chat`, {
           message: userMessage,
-        });
+        }, { headers });
 
         setMessages((prev) => [
           ...prev,
