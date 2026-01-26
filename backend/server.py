@@ -385,7 +385,7 @@ async def analyze_multiple_images(
         
         # Initialize LLM chat with vision model
         chat_client = LlmChat(
-            api_key=os.environ['EMERGENT_LLM_KEY'],
+            api_key=api_key,
             session_id="vision-multiple-session",
             system_message="""Você é um analista técnico profissional especializado em análise comparativa de múltiplos gráficos de trading.
 
