@@ -402,6 +402,34 @@ Responda SEMPRE em português brasileiro de forma profissional."""
         )
         ai_response = await chat_client.send_message(user_msg)
         
+        # Generate annotated images if CALL/PUT recommendations are detected
+        annotated_image_paths = []
+        try:
+            annotator = ChartAnnotator()
+            signals = annotator.extract_trading_signals(ai_response)
+            
+            if signals['action'] in ['CALL', 'PUT']:
+                # Annotate each image
+                for idx, (img_bytes, img_id) in enumerate(zip(original_image_bytes, image_ids)):
+                    try:
+                        annotated_bytes = annotator.annotate_chart(img_bytes, ai_response, signals)
+                        
+                        # Save annotated image
+                        annotated_filename = f"{img_id}_annotated.png"
+                        annotated_path = f"uploads/{annotated_filename}"
+                        
+                        with open(annotated_path, "wb") as f:
+                            f.write(annotated_bytes)
+                        
+                        annotated_image_paths.append(f"/uploads/{annotated_filename}")
+                        logging.info(f"Generated annotated image {idx + 1}: {annotated_path}")
+                    except Exception as e:
+                        logging.error(f"Error annotating image {idx + 1}: {str(e)}")
+                        annotated_image_paths.append(None)
+        except Exception as e:
+            logging.error(f"Error in annotation process: {str(e)}")
+            # Continue without annotated images
+        
         # Create assistant message
         assistant_message = Message(
             role="assistant",
@@ -416,6 +444,7 @@ Responda SEMPRE em português brasileiro de forma profissional."""
         return MultipleImagesAnalysisResponse(
             image_ids=image_ids,
             image_paths=image_paths,
+            annotated_image_paths=annotated_image_paths if annotated_image_paths else None,
             user_message=user_message,
             assistant_message=assistant_message
         )
