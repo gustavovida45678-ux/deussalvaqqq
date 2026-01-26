@@ -100,6 +100,8 @@ class ChartAnnotator:
         support_patterns = [
             r'SUPORTE.*?(\d+[.,]\d+)',
             r'SUPPORT.*?(\d+[.,]\d+)',
+            r'REGIÃO.*?(\d+[.,]\d+)',
+            r'ABAIXO.*?DE.*?(\d+[.,]\d+)',
         ]
         for pattern in support_patterns:
             matches = re.findall(pattern, text_upper)
@@ -110,23 +112,39 @@ class ChartAnnotator:
         resistance_patterns = [
             r'RESISTÊNCIA.*?(\d+[.,]\d+)',
             r'RESISTANCE.*?(\d+[.,]\d+)',
+            r'ROMPER.*?(\d+[.,]\d+)',
+            r'ACIMA.*?DE.*?(\d+[.,]\d+)',
         ]
         for pattern in resistance_patterns:
             matches = re.findall(pattern, text_upper)
             if matches:
                 signals['resistance_levels'].extend([float(m.replace(',', '.')) for m in matches])
         
-        # Extract stop loss
-        sl_pattern = r'STOP.*?LOSS.*?(\d+[.,]\d+)'
-        sl_match = re.search(sl_pattern, text_upper)
-        if sl_match:
-            signals['stop_loss'] = float(sl_match.group(1).replace(',', '.'))
+        # Extract stop loss - improved patterns
+        sl_patterns = [
+            r'STOP.*?LOSS.*?(\d+[.,]\d+)',
+            r'STOP.*?ABAIXO.*?(\d+[.,]\d+)',
+            r'STOP.*?ACIMA.*?(\d+[.,]\d+)',
+            r'SL.*?(\d+[.,]\d+)',
+        ]
+        for pattern in sl_patterns:
+            sl_match = re.search(pattern, text_upper)
+            if sl_match:
+                signals['stop_loss'] = float(sl_match.group(1).replace(',', '.'))
+                break
         
-        # Extract take profit
-        tp_pattern = r'TAKE.*?PROFIT.*?(\d+[.,]\d+)'
-        tp_match = re.search(tp_pattern, text_upper)
-        if tp_match:
-            signals['take_profit'] = float(tp_match.group(1).replace(',', '.'))
+        # Extract take profit - improved patterns  
+        tp_patterns = [
+            r'TAKE.*?PROFIT.*?(\d+[.,]\d+)',
+            r'ALVO[S]?.*?(\d+[.,]\d+)',
+            r'TARGET.*?(\d+[.,]\d+)',
+            r'TP.*?(\d+[.,]\d+)',
+        ]
+        for pattern in tp_patterns:
+            tp_match = re.search(pattern, text_upper)
+            if tp_match:
+                signals['take_profit'] = float(tp_match.group(1).replace(',', '.'))
+                break
         
         return signals
     
