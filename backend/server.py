@@ -137,9 +137,13 @@ async def chat(request: ChatRequest, x_custom_api_key: Optional[str] = Header(No
 @api_router.post("/chat/image", response_model=ImageAnalysisResponse)
 async def analyze_image(
     file: UploadFile = File(...),
-    question: str = Form(default="Faça uma análise técnica completa deste gráfico: identifique o ativo, timeframe, tendência, padrões de candlestick, níveis de suporte/resistência, indicadores visíveis, e forneça projeções com estimativas de próximos movimentos, incluindo probabilidades e recomendações de entrada (COMPRA/VENDA) com níveis de stop loss e take profit.")
+    question: str = Form(default="Faça uma análise técnica completa deste gráfico: identifique o ativo, timeframe, tendência, padrões de candlestick, níveis de suporte/resistência, indicadores visíveis, e forneça projeções com estimativas de próximos movimentos, incluindo probabilidades e recomendações de entrada (COMPRA/VENDA) com níveis de stop loss e take profit."),
+    x_custom_api_key: Optional[str] = Header(None)
 ):
     try:
+        # Use custom API key if provided
+        api_key = x_custom_api_key if x_custom_api_key else os.environ['EMERGENT_LLM_KEY']
+        
         # Validate file type
         if not file.content_type or not file.content_type.startswith("image/"):
             raise HTTPException(status_code=400, detail="Arquivo não é uma imagem válida")
