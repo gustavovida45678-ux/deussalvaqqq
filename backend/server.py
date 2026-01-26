@@ -57,6 +57,7 @@ class ImageAnalysisResponse(BaseModel):
 class MultipleImagesAnalysisResponse(BaseModel):
     image_ids: List[str]
     image_paths: List[str]
+    annotated_image_paths: Optional[List[str]] = None
     user_message: Message
     assistant_message: Message
 
