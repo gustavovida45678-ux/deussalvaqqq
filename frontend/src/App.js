@@ -177,10 +177,16 @@ function App() {
           },
         });
 
+        // Add annotated image URLs to assistant message if available
+        const assistantMsg = response.data.assistant_message;
+        if (response.data.annotated_image_paths) {
+          assistantMsg.annotated_image_urls = response.data.annotated_image_paths;
+        }
+
         setMessages((prev) => [
           ...prev,
           response.data.user_message,
-          response.data.assistant_message,
+          assistantMsg,
         ]);
         clearAllImages();
       } else {
