@@ -69,9 +69,16 @@ class ChartAnnotator:
             signals['trend'] = 'LATERAL'
         
         # Extract confidence level
-        confidence_match = re.search(r'(\d+)%.*(?:CONFIANÇA|CONFIDENCE)', text_upper)
-        if confidence_match:
-            signals['confidence'] = int(confidence_match.group(1))
+        confidence_patterns = [
+            r'(\d+)%.*(?:CONFIANÇA|CONFIDENCE)',
+            r'(?:CONFIANÇA|CONFIDENCE).*?(\d+)%',
+            r'NÍVEL DE CONFIANÇA.*?(\d+)%',
+        ]
+        for pattern in confidence_patterns:
+            confidence_match = re.search(pattern, text_upper)
+            if confidence_match:
+                signals['confidence'] = int(confidence_match.group(1))
+                break
         
         # Extract strategy type
         strategy_patterns = [
