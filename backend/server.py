@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import base64
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
+from image_annotator import ChartAnnotator
 
 
 ROOT_DIR = Path(__file__).parent
