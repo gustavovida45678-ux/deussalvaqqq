@@ -50,6 +50,7 @@ class ChatResponse(BaseModel):
 class ImageAnalysisResponse(BaseModel):
     image_id: str
     image_path: str
+    annotated_image_path: Optional[str] = None
     user_message: Message
     assistant_message: Message
 
