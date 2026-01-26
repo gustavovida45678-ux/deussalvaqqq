@@ -308,6 +308,7 @@ async def analyze_multiple_images(
         image_paths = []
         image_contents = []
         image_urls = []
+        original_image_bytes = []  # Store original bytes for annotation
         
         # Process all images
         for file in files:
@@ -317,6 +318,9 @@ async def analyze_multiple_images(
             # Validate image is not empty
             if len(image_bytes) == 0:
                 raise HTTPException(status_code=400, detail=f"Imagem {file.filename} está vazia")
+            
+            # Store original bytes
+            original_image_bytes.append(image_bytes)
             
             # Convert to base64
             image_base64 = base64.b64encode(image_bytes).decode("utf-8")
