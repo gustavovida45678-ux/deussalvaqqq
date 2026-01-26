@@ -27,8 +27,10 @@ class ChartAnnotator:
             'text_bg': '#000000cc',  # Semi-transparent black
             'text_fg': '#ffffff',  # White text
             'arrow': '#ffff00',  # Yellow arrows
+            'trend_line': '#00ffff',  # Cyan for trend lines
+            'zone': '#ff00ff44',  # Semi-transparent magenta for zones
         }
-    
+        
     def extract_trading_signals(self, analysis_text: str) -> Dict:
         """
         Extract trading signals from AI analysis text
@@ -43,39 +45,121 @@ class ChartAnnotator:
             'strategy': None,
             'confidence': None,
             'key_levels': [],
+            'support_levels': [],
+            'resistance_levels': [],
+            'trend': None,  # 'ALTA', 'BAIXA', 'LATERAL'
         }
         
         text_upper = analysis_text.upper()
         
         # Detect action (CALL/PUT/BUY/SELL)
-        if any(word in text_upper for word in ['COMPRA', 'CALL', 'BUY', 'ALTA']):
+        if any(word in text_upper for word in ['COMPRA', 'CALL', 'BUY', 'ALTA', 'BULLISH']):
             signals['action'] = 'CALL'
-        elif any(word in text_upper for word in ['VENDA', 'PUT', 'SELL', 'BAIXA']):
+        elif any(word in text_upper for word in ['VENDA', 'PUT', 'SELL', 'BAIXA', 'BEARISH']):
             signals['action'] = 'PUT'
-        elif any(word in text_upper for word in ['AGUARDAR', 'WAIT', 'NEUTRO']):
+        elif any(word in text_upper for word in ['AGUARDAR', 'WAIT', 'NEUTRO', 'LATERAL']):
             signals['action'] = 'WAIT'
         
+        # Detect trend
+        if any(word in text_upper for word in ['TENDÊNCIA DE ALTA', 'UPTREND', 'ALTA']):
+            signals['trend'] = 'ALTA'
+        elif any(word in text_upper for word in ['TENDÊNCIA DE BAIXA', 'DOWNTREND', 'BAIXA']):
+            signals['trend'] = 'BAIXA'
+        elif any(word in text_upper for word in ['LATERAL', 'SIDEWAYS', 'CONSOLIDAÇÃO']):
+            signals['trend'] = 'LATERAL'
+        
         # Extract confidence level
-        confidence_match = re.search(r'(\d+)%.*confiança', text_upper)
+        confidence_match = re.search(r'(\d+)%.*(?:CONFIANÇA|CONFIDENCE)', text_upper)
         if confidence_match:
             signals['confidence'] = int(confidence_match.group(1))
         
         # Extract strategy type
         strategy_patterns = [
-            'COUNTER-TREND', 'TREND-FOLLOWING', 'BREAKOUT',
-            'REVERSAL', 'PULLBACK', 'CONTINUAÇÃO', 'REVERSÃO'
+            'COUNTER-TREND', 'CONTRA-TENDÊNCIA', 'TREND-FOLLOWING', 'SEGUIR TENDÊNCIA',
+            'BREAKOUT', 'ROMPIMENTO', 'REVERSAL', 'REVERSÃO', 'PULLBACK', 'CONTINUAÇÃO'
         ]
         for pattern in strategy_patterns:
             if pattern in text_upper:
                 signals['strategy'] = pattern
                 break
         
-        # Extract price levels (simplified - could be improved with better parsing)
+        # Extract price levels (improved regex)
         price_matches = re.findall(r'(\d+[.,]\d+)', analysis_text)
         if price_matches:
-            signals['key_levels'] = [float(p.replace(',', '.')) for p in price_matches[:5]]
+            prices = [float(p.replace(',', '.')) for p in price_matches[:10]]
+            signals['key_levels'] = sorted(set(prices))[:5]  # Remove duplicates and limit to 5
+        
+        # Extract support levels
+        support_patterns = [
+            r'SUPORTE.*?(\d+[.,]\d+)',
+            r'SUPPORT.*?(\d+[.,]\d+)',
+        ]
+        for pattern in support_patterns:
+            matches = re.findall(pattern, text_upper)
+            if matches:
+                signals['support_levels'].extend([float(m.replace(',', '.')) for m in matches])
+        
+        # Extract resistance levels
+        resistance_patterns = [
+            r'RESISTÊNCIA.*?(\d+[.,]\d+)',
+            r'RESISTANCE.*?(\d+[.,]\d+)',
+        ]
+        for pattern in resistance_patterns:
+            matches = re.findall(pattern, text_upper)
+            if matches:
+                signals['resistance_levels'].extend([float(m.replace(',', '.')) for m in matches])
+        
+        # Extract stop loss
+        sl_pattern = r'STOP.*?LOSS.*?(\d+[.,]\d+)'
+        sl_match = re.search(sl_pattern, text_upper)
+        if sl_match:
+            signals['stop_loss'] = float(sl_match.group(1).replace(',', '.'))
+        
+        # Extract take profit
+        tp_pattern = r'TAKE.*?PROFIT.*?(\d+[.,]\d+)'
+        tp_match = re.search(tp_pattern, text_upper)
+        if tp_match:
+            signals['take_profit'] = float(tp_match.group(1).replace(',', '.'))
         
         return signals
+    
+    def detect_chart_regions(self, image_bytes: bytes) -> Dict:
+        """
+        Detect chart regions using image processing
+        Returns coordinates for different chart areas
+        """
+        # Convert to numpy array
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        height, width = img.shape[:2]
+        
+        # Simple heuristic-based region detection
+        regions = {
+            'chart_area': {
+                'x': int(width * 0.1),
+                'y': int(height * 0.1),
+                'width': int(width * 0.8),
+                'height': int(height * 0.7),
+            },
+            'top_area': {
+                'y_start': 0,
+                'y_end': int(height * 0.15),
+            },
+            'bottom_area': {
+                'y_start': int(height * 0.85),
+                'y_end': height,
+            },
+            'left_area': {
+                'x_start': 0,
+                'x_end': int(width * 0.15),
+            },
+            'right_area': {
+                'x_start': int(width * 0.85),
+                'x_end': width,
+            },
+        }
+        
+        return regions
     
     def annotate_chart(self, 
                        image_bytes: bytes, 
@@ -87,22 +171,56 @@ class ChartAnnotator:
         """
         # Load image
         image = Image.open(io.BytesIO(image_bytes))
-        draw = ImageDraw.Draw(image, 'RGBA')
+        
+        # Convert to RGBA for transparency support
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+        
+        # Create overlay for transparent elements
+        overlay = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        draw_overlay = ImageDraw.Draw(overlay)
+        
+        # Create main draw object
+        draw = ImageDraw.Draw(image)
         width, height = image.size
         
         # Extract signals if not provided
         if signals is None:
             signals = self.extract_trading_signals(analysis_text)
         
-        # Try to load a font, fallback to default if not available
+        # Detect chart regions
         try:
-            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
-            font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+            regions = self.detect_chart_regions(image_bytes)
+        except Exception as e:
+            logger.warning(f"Could not detect chart regions: {e}")
+            regions = None
+        
+        # Try to load fonts, fallback to default if not available
+        try:
+            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+            font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16)
         except:
             font_large = ImageFont.load_default()
             font_medium = ImageFont.load_default()
             font_small = ImageFont.load_default()
+        
+        # Draw zones first (background elements)
+        if signals['trend'] and regions:
+            self._draw_trend_zones(draw_overlay, width, height, signals['trend'], regions)
+        
+        # Draw support and resistance lines
+        if signals['support_levels'] or signals['resistance_levels']:
+            self._draw_support_resistance_lines(
+                draw, width, height, 
+                signals['support_levels'], 
+                signals['resistance_levels'],
+                font_small
+            )
+        
+        # Draw trend lines
+        if signals['trend']:
+            self._draw_trend_lines(draw, width, height, signals['trend'])
         
         # Add main recommendation banner
         if signals['action'] in ['CALL', 'PUT']:
@@ -113,22 +231,39 @@ class ChartAnnotator:
                 font_large
             )
         
-        # Add entry point annotation
+        # Add entry point annotation with improved positioning
         if signals['action'] == 'CALL':
-            self._draw_entry_annotation(
+            self._draw_entry_annotation_v2(
                 draw, width, height,
                 'CALL ENTRY',
                 self.colors['call'],
-                position='bottom',
+                position='bottom-left',
                 font=font_medium
             )
         elif signals['action'] == 'PUT':
-            self._draw_entry_annotation(
+            self._draw_entry_annotation_v2(
                 draw, width, height,
                 'PUT ENTRY',
                 self.colors['put'],
-                position='top',
+                position='top-left',
                 font=font_medium
+            )
+        
+        # Add exit points if available
+        if signals.get('take_profit'):
+            self._draw_exit_annotation(
+                draw, width, height,
+                f"TP: {signals['take_profit']:.4f}",
+                self.colors['call'] if signals['action'] == 'CALL' else self.colors['put'],
+                font=font_small
+            )
+        
+        if signals.get('stop_loss'):
+            self._draw_stop_loss_annotation(
+                draw, width, height,
+                f"SL: {signals['stop_loss']:.4f}",
+                '#ff0000',
+                font=font_small
             )
         
         # Add strategy label if available
@@ -139,18 +274,181 @@ class ChartAnnotator:
                 font_small
             )
         
-        # Add key levels if available
-        if signals['key_levels'] and len(signals['key_levels']) > 0:
-            self._draw_key_levels(
-                draw, width, height,
-                signals['key_levels'],
-                font_small
-            )
+        # Composite the overlay
+        image = Image.alpha_composite(image, overlay)
         
-        # Convert back to bytes
+        # Convert back to RGB for saving
+        image = image.convert('RGB')
+        
+        # Convert to bytes
         output = io.BytesIO()
-        image.save(output, format='PNG')
+        image.save(output, format='PNG', quality=95)
         return output.getvalue()
+    
+    def _draw_trend_zones(self, draw, width, height, trend, regions):
+        """Draw semi-transparent zones indicating trend areas"""
+        chart_area = regions['chart_area']
+        
+        if trend == 'ALTA':
+            # Draw bullish zone in lower half
+            zone_y = chart_area['y'] + int(chart_area['height'] * 0.5)
+            draw.rectangle(
+                [
+                    chart_area['x'],
+                    zone_y,
+                    chart_area['x'] + chart_area['width'],
+                    chart_area['y'] + chart_area['height']
+                ],
+                fill=(0, 255, 0, 30)  # Light green
+            )
+        elif trend == 'BAIXA':
+            # Draw bearish zone in upper half
+            zone_y = chart_area['y'] + int(chart_area['height'] * 0.5)
+            draw.rectangle(
+                [
+                    chart_area['x'],
+                    chart_area['y'],
+                    chart_area['x'] + chart_area['width'],
+                    zone_y
+                ],
+                fill=(255, 0, 0, 30)  # Light red
+            )
+    
+    def _draw_support_resistance_lines(self, draw, width, height, support_levels, resistance_levels, font):
+        """Draw horizontal lines for support and resistance with labels"""
+        # Draw support levels
+        for i, level in enumerate(support_levels[:3]):
+            y = height - 100 - (i * 60)  # Position from bottom
+            
+            # Draw dashed line
+            self._draw_dashed_line(
+                draw, 
+                (50, y), 
+                (width - 50, y), 
+                self.colors['support'], 
+                width=3
+            )
+            
+            # Draw label
+            label = f"Suporte: {level:.4f}"
+            bbox = draw.textbbox((0, 0), label, font=font)
+            text_width = bbox[2] - bbox[0]
+            
+            padding = 5
+            label_x = width - text_width - 70
+            draw.rectangle(
+                [label_x - padding, y - 15, label_x + text_width + padding, y + 5],
+                fill=(0, 0, 0, 200)
+            )
+            draw.text((label_x, y - 12), label, fill=self.colors['support'], font=font)
+        
+        # Draw resistance levels
+        for i, level in enumerate(resistance_levels[:3]):
+            y = 100 + (i * 60)  # Position from top
+            
+            # Draw dashed line
+            self._draw_dashed_line(
+                draw,
+                (50, y),
+                (width - 50, y),
+                self.colors['resistance'],
+                width=3
+            )
+            
+            # Draw label
+            label = f"Resistência: {level:.4f}"
+            bbox = draw.textbbox((0, 0), label, font=font)
+            text_width = bbox[2] - bbox[0]
+            
+            padding = 5
+            label_x = width - text_width - 70
+            draw.rectangle(
+                [label_x - padding, y - 15, label_x + text_width + padding, y + 5],
+                fill=(0, 0, 0, 200)
+            )
+            draw.text((label_x, y - 12), label, fill=self.colors['resistance'], font=font)
+    
+    def _draw_dashed_line(self, draw, start, end, color, width=2, dash_length=10):
+        """Draw a dashed line"""
+        x1, y1 = start
+        x2, y2 = end
+        
+        # Calculate distance and angle
+        dx = x2 - x1
+        dy = y2 - y1
+        distance = (dx**2 + dy**2)**0.5
+        
+        # Number of dashes
+        num_dashes = int(distance / (dash_length * 2))
+        
+        for i in range(num_dashes):
+            t1 = i * 2 * dash_length / distance
+            t2 = (i * 2 + 1) * dash_length / distance
+            
+            if t2 > 1:
+                t2 = 1
+            
+            px1 = x1 + t1 * dx
+            py1 = y1 + t1 * dy
+            px2 = x1 + t2 * dx
+            py2 = y1 + t2 * dy
+            
+            draw.line([(px1, py1), (px2, py2)], fill=color, width=width)
+    
+    def _draw_trend_lines(self, draw, width, height, trend):
+        """Draw trend lines indicating market direction"""
+        if trend == 'ALTA':
+            # Upward trend line
+            points = [
+                (width * 0.2, height * 0.7),
+                (width * 0.8, height * 0.3)
+            ]
+            draw.line(points, fill=self.colors['trend_line'], width=4)
+            
+            # Add arrow at the end
+            self._draw_arrow(draw, points[1], 'up', self.colors['trend_line'])
+            
+        elif trend == 'BAIXA':
+            # Downward trend line
+            points = [
+                (width * 0.2, height * 0.3),
+                (width * 0.8, height * 0.7)
+            ]
+            draw.line(points, fill=self.colors['trend_line'], width=4)
+            
+            # Add arrow at the end
+            self._draw_arrow(draw, points[1], 'down', self.colors['trend_line'])
+    
+    def _draw_arrow(self, draw, position, direction, color, size=20):
+        """Draw an arrow"""
+        x, y = position
+        
+        if direction == 'up':
+            points = [
+                (x, y - size),
+                (x - size/2, y),
+                (x + size/2, y)
+            ]
+        elif direction == 'down':
+            points = [
+                (x, y + size),
+                (x - size/2, y),
+                (x + size/2, y)
+            ]
+        elif direction == 'left':
+            points = [
+                (x - size, y),
+                (x, y - size/2),
+                (x, y + size/2)
+            ]
+        elif direction == 'right':
+            points = [
+                (x + size, y),
+                (x, y - size/2),
+                (x, y + size/2)
+            ]
+        
+        draw.polygon(points, fill=color)
     
     def _draw_recommendation_banner(self, draw, width, height, action, confidence, font):
         """Draw main recommendation banner at top"""
@@ -167,97 +465,135 @@ class ChartAnnotator:
         x = (width - text_width) // 2
         y = 20
         
-        # Draw background
+        # Draw background with gradient effect (simulate with multiple rectangles)
         color = self.colors['call'] if action == 'CALL' else self.colors['put']
         padding = 15
+        
+        # Draw shadow
+        draw.rectangle(
+            [x - padding + 3, y - padding + 3, x + text_width + padding + 3, y + text_height + padding + 3],
+            fill=(0, 0, 0, 150)
+        )
+        
+        # Draw background
         draw.rectangle(
             [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
-            fill=(0, 0, 0, 200)
+            fill=(0, 0, 0, 220)
         )
         draw.rectangle(
             [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
             outline=color,
-            width=3
+            width=4
         )
         
         # Draw text
         draw.text((x, y), text, fill=color, font=font)
     
-    def _draw_entry_annotation(self, draw, width, height, label, color, position, font):
-        """Draw entry point annotation with arrow"""
+    def _draw_entry_annotation_v2(self, draw, width, height, label, color, position, font):
+        """Draw entry point annotation with improved positioning"""
         bbox = draw.textbbox((0, 0), label, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         
         # Position based on entry type
-        if position == 'bottom':
-            x = width // 3
-            y = height - 100
-            arrow_y = y - 30
-        else:  # top
-            x = width // 3
-            y = 100
-            arrow_y = y + text_height + 30
+        if position == 'bottom-left':
+            x = width // 4
+            y = height - 150
+            arrow_direction = 'up'
+            arrow_y = y - 40
+        elif position == 'top-left':
+            x = width // 4
+            y = 120
+            arrow_direction = 'down'
+            arrow_y = y + text_height + 40
+        elif position == 'bottom-right':
+            x = width * 3 // 4 - text_width
+            y = height - 150
+            arrow_direction = 'up'
+            arrow_y = y - 40
+        else:  # top-right
+            x = width * 3 // 4 - text_width
+            y = 120
+            arrow_direction = 'down'
+            arrow_y = y + text_height + 40
         
-        # Draw background box
-        padding = 10
+        # Draw background box with shadow
+        padding = 12
+        draw.rectangle(
+            [x - padding + 2, y - padding + 2, x + text_width + padding + 2, y + text_height + padding + 2],
+            fill=(0, 0, 0, 150)
+        )
         draw.rectangle(
             [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
-            fill=(0, 0, 0, 180)
+            fill=(0, 0, 0, 200),
+            outline=color,
+            width=3
         )
         
         # Draw text
         draw.text((x, y), label, fill=color, font=font)
         
         # Draw arrow
-        arrow_points = [
-            (x + text_width // 2 - 10, arrow_y),
-            (x + text_width // 2 + 10, arrow_y),
-            (x + text_width // 2, arrow_y + (20 if position == 'bottom' else -20))
-        ]
-        draw.polygon(arrow_points, fill=color)
+        arrow_x = x + text_width // 2
+        self._draw_arrow(draw, (arrow_x, arrow_y), arrow_direction, color, size=25)
+    
+    def _draw_exit_annotation(self, draw, width, height, label, color, font):
+        """Draw take profit annotation"""
+        bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = width - text_width - 80
+        y = height // 3
+        
+        padding = 8
+        draw.rectangle(
+            [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
+            fill=(0, 0, 0, 180),
+            outline=color,
+            width=2
+        )
+        draw.text((x, y), label, fill=color, font=font)
+    
+    def _draw_stop_loss_annotation(self, draw, width, height, label, color, font):
+        """Draw stop loss annotation"""
+        bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = width - text_width - 80
+        y = height * 2 // 3
+        
+        padding = 8
+        draw.rectangle(
+            [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
+            fill=(0, 0, 0, 180),
+            outline=color,
+            width=2
+        )
+        draw.text((x, y), label, fill=color, font=font)
     
     def _draw_strategy_label(self, draw, width, height, strategy, font):
         """Draw strategy type label"""
-        label = f"Estratégia: {strategy}"
+        label = f"📊 {strategy}"
         bbox = draw.textbbox((0, 0), label, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         
         x = 20
-        y = height - 50
+        y = height - 60
         
         # Draw background
-        padding = 8
+        padding = 10
         draw.rectangle(
             [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
-            fill=(0, 0, 0, 150)
+            fill=(0, 0, 0, 180),
+            outline='#ffffff',
+            width=2
         )
         
         # Draw text
         draw.text((x, y), label, fill='#ffffff', font=font)
-    
-    def _draw_key_levels(self, draw, width, height, levels, font):
-        """Draw key support/resistance levels"""
-        # Draw first 3 levels as horizontal lines with labels
-        for i, level in enumerate(levels[:3]):
-            y = height // 4 + (i * height // 6)
-            
-            # Draw line
-            color = self.colors['resistance'] if i % 2 == 0 else self.colors['support']
-            draw.line([(50, y), (width - 50, y)], fill=color, width=2)
-            
-            # Draw label
-            label = f"{level:.4f}"
-            bbox = draw.textbbox((0, 0), label, font=font)
-            text_width = bbox[2] - bbox[0]
-            
-            padding = 5
-            draw.rectangle(
-                [width - text_width - 60, y - 12, width - 55, y + 12],
-                fill=(0, 0, 0, 180)
-            )
-            draw.text((width - text_width - 58, y - 10), label, fill=color, font=font)
 
 
 def create_annotated_chart(image_bytes: bytes, analysis_text: str) -> bytes:
