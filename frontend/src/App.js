@@ -203,6 +203,16 @@ function App() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      
+      // Extract error message from response
+      let errorMessage = "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.";
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       // Add error message
       setMessages((prev) => [
         ...prev,
@@ -215,8 +225,7 @@ function App() {
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content:
-            "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
+          content: errorMessage,
           timestamp: new Date().toISOString(),
         },
       ]);
