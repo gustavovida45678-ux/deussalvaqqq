@@ -330,7 +330,7 @@ async def analyze_multiple_images(
         
         # Validate all files are images
         for file in files:
-            if not file.content_type or not file.content_type.startsWith("image/"):
+            if not file.content_type or not file.content_type.startswith("image/"):
                 raise HTTPException(status_code=400, detail=f"Arquivo {file.filename} não é uma imagem válida")
         
         image_ids = []
