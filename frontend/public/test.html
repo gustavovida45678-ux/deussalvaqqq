@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Conexão - Backend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-box {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #6d28d9;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Teste de Conexão - Backend</h1>
+    
+    <div class="test-box">
+        <h3>Teste 1: Health Check</h3>
+        <button onclick="testHealth()">Testar /api/</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Teste 2: Chat Endpoint</h3>
+        <button onclick="testChat()">Testar /api/chat</button>
+        <div id="chat-result" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Teste 3: Com Custom API Key</h3>
+        <input type="text" id="custom-key" placeholder="Cole sua chave OpenAI (opcional)" style="width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #444; color: white; border-radius: 4px;">
+        <button onclick="testWithCustomKey()">Testar com Chave Custom</button>
+        <div id="custom-result" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Informações do Sistema</h3>
+        <div id="system-info" class="result"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:8001';
+        
+        // Mostrar informações do sistema
+        document.getElementById('system-info').innerHTML = `
+Backend URL: ${BACKEND_URL}
+Frontend URL: ${window.location.origin}
+LocalStorage API Provider: ${localStorage.getItem('api_provider') || 'não configurado'}
+LocalStorage API Key: ${localStorage.getItem('user_api_key') ? 'CONFIGURADA' : 'não configurada'}
+        `;
+
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = '⏳ Testando...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/`);
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✅ SUCESSO!</span>\n\nStatus: ${response.status}\nResposta: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERRO!</span>\n\n${error.message}\n\nDetalhes:\n${error.stack}`;
+            }
+        }
+
+        async function testChat() {
+            const result = document.getElementById('chat-result');
+            result.innerHTML = '⏳ Enviando mensagem...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: 'Teste de conexão' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✅ SUCESSO!</span>\n\nStatus: ${response.status}\n\nMensagem da IA:\n"${data.assistant_message.content}"`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ ERRO HTTP ${response.status}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERRO DE REDE!</span>\n\n${error.message}\n\nIsso pode indicar:\n- Backend não está rodando\n- CORS bloqueado\n- Firewall bloqueando\n- URL incorreta\n\nDetalhes técnicos:\n${error.stack}`;
+            }
+        }
+
+        async function testWithCustomKey() {
+            const result = document.getElementById('custom-result');
+            const customKey = document.getElementById('custom-key').value;
+            
+            if (!customKey) {
+                result.innerHTML = '<span class="error">⚠️ Cole uma chave API primeiro!</span>';
+                return;
+            }
+            
+            result.innerHTML = '⏳ Testando com chave customizada...';
+            
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                if (customKey) {
+                    headers['X-Custom-API-Key'] = customKey;
+                }
+                
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ message: 'Teste com chave custom' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✅ SUCESSO COM CHAVE CUSTOM!</span>\n\nStatus: ${response.status}\n\nMensagem da IA:\n"${data.assistant_message.content}"`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ ERRO HTTP ${response.status}</span>\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">❌ ERRO DE REDE!</span>\n\n${error.message}`;
+            }
+        }
+
+        // Testar automaticamente ao carregar
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>
