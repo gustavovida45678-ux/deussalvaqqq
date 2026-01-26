@@ -3,7 +3,8 @@ import "@/App.css";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Send, Image as ImageIcon, X, Sparkles } from "lucide-react";
+import { Send, Image as ImageIcon, X, Sparkles, Settings } from "lucide-react";
+import ApiKeySettings from "./components/ApiKeySettings";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -17,6 +18,7 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [showImageGenModal, setShowImageGenModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [imageGenPrompt, setImageGenPrompt] = useState("");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
