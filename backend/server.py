@@ -75,8 +75,11 @@ class ImageGenerationResponse(BaseModel):
 
 # Chat endpoint
 @api_router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, x_custom_api_key: Optional[str] = Header(None)):
     try:
+        # Use custom API key if provided, otherwise use Emergent key
+        api_key = x_custom_api_key if x_custom_api_key else os.environ['EMERGENT_LLM_KEY']
+        
         # Create user message
         user_message = Message(
             role="user",
@@ -90,7 +93,7 @@ async def chat(request: ChatRequest):
         
         # Initialize LLM chat
         chat_client = LlmChat(
-            api_key=os.environ['EMERGENT_LLM_KEY'],
+            api_key=api_key,
             session_id="chat-session",
             system_message="Você é um assistente útil e amigável. Responda em português de forma clara e concisa."
         )
