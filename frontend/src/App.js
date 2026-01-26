@@ -254,6 +254,16 @@ function App() {
       ]);
     } catch (error) {
       console.error("Error generating image:", error);
+      
+      // Extract error message from response
+      let errorMessage = "Desculpe, ocorreu um erro ao gerar a imagem. Por favor, tente novamente.";
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setMessages((prev) => [
         ...prev,
         {
@@ -265,8 +275,7 @@ function App() {
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content:
-            "Desculpe, ocorreu um erro ao gerar a imagem. Por favor, tente novamente.",
+          content: errorMessage,
           timestamp: new Date().toISOString(),
         },
       ]);
