@@ -313,6 +313,21 @@ function App() {
     <div className="App neural-void-bg">
       <div className="noise-overlay" />
 
+      {/* Settings Button */}
+      <button
+        className="settings-button"
+        onClick={() => setShowSettingsModal(true)}
+        title="Configurações de API"
+        data-testid="settings-button"
+      >
+        <Settings size={24} />
+      </button>
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <ApiKeySettings onClose={() => setShowSettingsModal(false)} />
+      )}
+
       {/* Drag and drop overlay */}
       {isDragging && (
         <div className="drag-drop-overlay" data-testid="drag-drop-overlay">
